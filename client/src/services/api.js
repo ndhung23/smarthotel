@@ -1,14 +1,26 @@
 import axios from 'axios';
 
 /**
- * Tự động phân giải Base API URL theo môi trường:
- * 1. Nếu có biến môi trường REACT_APP_API_URL -> sử dụng giá trị đó.
- * 2. Nếu ở môi trường Production -> mặc định dùng relative path '/api' (chuẩn monolithic/same-origin, không sợ CORS hay hardcode localhost).
- * 3. Nếu ở môi trường Development -> fallback về 'http://localhost:5000/api'.
+ * Tự động phân giải và chuẩn hóa Base API URL theo môi trường:
+ * 1. Nếu có REACT_APP_API_URL:
+ *    - Tự động bổ sung https:// nếu người dùng quên gõ giao thức.
+ *    - Tự động bổ sung /api nếu người dùng quên thêm hậu tố endpoint.
+ * 2. Nếu ở môi trường Production (không có biến): dùng relative path '/api'.
+ * 3. Nếu ở Development: dùng 'http://localhost:5000/api'.
  */
 const getBaseURL = () => {
-  if (process.env.REACT_APP_API_URL) {
-    return process.env.REACT_APP_API_URL;
+  let url = process.env.REACT_APP_API_URL;
+  if (url) {
+    url = url.trim();
+    // Tự động thêm https:// nếu thiếu http:// hoặc https:// (chống lỗi relative path nhầm domain)
+    if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('/')) {
+      url = `https://${url}`;
+    }
+    // Tự động thêm /api nếu người dùng quên
+    if (!url.endsWith('/api') && !url.endsWith('/api/')) {
+      url = `${url.replace(/\/$/, '')}/api`;
+    }
+    return url;
   }
 
   if (process.env.NODE_ENV === 'production') {

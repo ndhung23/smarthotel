@@ -19,16 +19,36 @@ app.set('trust proxy', 1);
 // Connect to MongoDB
 connectDB();
 
-// CORS Configuration - Support multi-origin whitelist & same-origin
-const allowedOrigins = process.env.CLIENT_URL
+// CORS Configuration - Smart normalization & Vercel deployment support
+const rawClientUrls = process.env.CLIENT_URL
   ? process.env.CLIENT_URL.split(',').map((url) => url.trim())
   : ['http://localhost:3000', 'http://127.0.0.1:3000'];
+
+const allowedOrigins = rawClientUrls.map((url) =>
+  url.replace(/\/api\/?$/, '').replace(/\/$/, '')
+);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (curl, postman, mobile, same-origin SPA)
-      if (!origin || allowedOrigins.includes(origin) || !isProduction) {
+      // Allow requests with no origin (curl, postman, mobile, same-origin)
+      if (!origin) return callback(null, true);
+
+      // Normalize incoming origin (remove trailing slash)
+      const cleanOrigin = origin.replace(/\/$/, '');
+
+      // Check direct match or matching with http/https variant
+      const isAllowed = allowedOrigins.some((allowed) => {
+        if (allowed === '*' || cleanOrigin === allowed) return true;
+        // Allow https if user entered http in environment
+        if (allowed.replace(/^http:\/\//, 'https://') === cleanOrigin) return true;
+        return false;
+      });
+
+      // Also allow all vercel.app subdomains for this project's deployments
+      const isVercelOrigin = cleanOrigin.endsWith('.vercel.app');
+
+      if (isAllowed || isVercelOrigin || !isProduction) {
         return callback(null, true);
       }
       return callback(new Error(`CORS blocked for origin: ${origin}`));
