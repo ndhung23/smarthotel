@@ -1,11 +1,29 @@
 import axios from 'axios';
 
+/**
+ * Tự động phân giải Base API URL theo môi trường:
+ * 1. Nếu có biến môi trường REACT_APP_API_URL -> sử dụng giá trị đó.
+ * 2. Nếu ở môi trường Production -> mặc định dùng relative path '/api' (chuẩn monolithic/same-origin, không sợ CORS hay hardcode localhost).
+ * 3. Nếu ở môi trường Development -> fallback về 'http://localhost:5000/api'.
+ */
+const getBaseURL = () => {
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    return '/api';
+  }
+
+  return 'http://localhost:5000/api';
+};
+
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 15000,
 });
 
 // Request interceptor: attach auth token if available
@@ -31,4 +49,3 @@ api.interceptors.response.use(
 );
 
 export default api;
-

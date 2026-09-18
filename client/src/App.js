@@ -5,7 +5,8 @@ import {
   HiOutlineShieldCheck, 
   HiOutlineRefresh, 
   HiOutlineCheckCircle, 
-  HiOutlineXCircle 
+  HiOutlineXCircle,
+  HiOutlineGlobeAlt
 } from 'react-icons/hi';
 import api from './services/api';
 
@@ -31,6 +32,9 @@ function App() {
     checkHealth();
   }, []);
 
+  const currentEnv = process.env.NODE_ENV || 'development';
+  const apiBaseURL = api.defaults.baseURL;
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between">
       {/* Header */}
@@ -46,8 +50,12 @@ function App() {
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <span className="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
-              MERN Stack Ready
+            <span className={`hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+              currentEnv === 'production' 
+                ? 'bg-purple-100 text-purple-800' 
+                : 'bg-emerald-100 text-emerald-800'
+            }`}>
+              {currentEnv.toUpperCase()} MODE
             </span>
             <button
               onClick={checkHealth}
@@ -65,13 +73,22 @@ function App() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 w-full flex-grow">
         {/* Banner */}
         <div className="bg-gradient-to-r from-indigo-700 via-indigo-600 to-purple-600 rounded-2xl p-8 text-white shadow-xl mb-8">
-          <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl mb-2">
-            Hệ thống SmartHotel đã sẵn sàng!
-          </h2>
-          <p className="text-indigo-100 max-w-2xl text-sm sm:text-base leading-relaxed">
-            Nền tảng Fullstack MERN (MongoDB, Express, React, Node.js) đã được thiết lập thành công.
-            Bạn có thể bắt đầu xây dựng các module Quản lý phòng (Rooms), Đặt phòng (Bookings), Khách hàng (Users) và Tích hợp AI.
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl mb-2">
+                Hệ thống SmartHotel đã sẵn sàng!
+              </h2>
+              <p className="text-indigo-100 max-w-2xl text-sm sm:text-base leading-relaxed">
+                Nền tảng Fullstack MERN (MongoDB, Express, React, Node.js) đã được thiết lập chuẩn chỉ cho cả Development và Production.
+              </p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 text-xs space-y-1">
+              <div className="text-indigo-200 font-medium">API Endpoint cấu hình:</div>
+              <code className="text-white font-mono block bg-black/20 px-2 py-1 rounded">
+                {apiBaseURL}
+              </code>
+            </div>
+          </div>
         </div>
 
         {/* System Health Section */}
@@ -89,12 +106,17 @@ function App() {
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Frontend</span>
                   <HiOutlineCheckCircle className="w-6 h-6 text-emerald-500" />
                 </div>
-                <h4 className="text-base font-semibold text-slate-800">React Client</h4>
+                <div className="flex items-center space-x-2">
+                  <HiOutlineGlobeAlt className="w-5 h-5 text-indigo-500" />
+                  <h4 className="text-base font-semibold text-slate-800">React Client</h4>
+                </div>
                 <p className="text-sm text-slate-500 mt-1">React 19 + Tailwind CSS</p>
               </div>
               <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
-                <span>Port: 3000</span>
-                <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-medium">Running</span>
+                <span className="truncate max-w-[160px]" title={window.location.origin}>
+                  {window.location.host || 'Client App'}
+                </span>
+                <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-medium">Active</span>
               </div>
             </div>
 
@@ -102,7 +124,7 @@ function App() {
             <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Backend</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Backend API</span>
                   {loading ? (
                     <span className="text-xs font-medium text-slate-400">Checking...</span>
                   ) : healthData?.success ? (
@@ -113,18 +135,18 @@ function App() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <HiOutlineServer className="w-5 h-5 text-indigo-500" />
-                  <h4 className="text-base font-semibold text-slate-800">Express API Server</h4>
+                  <h4 className="text-base font-semibold text-slate-800">Express Server</h4>
                 </div>
                 <p className="text-sm text-slate-500 mt-1">
                   {loading ? 'Đang kết nối...' : healthData?.message || error}
                 </p>
               </div>
               <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
-                <span>Port: 5000</span>
+                <span className="font-mono text-slate-500">{apiBaseURL}</span>
                 <span className={`px-2 py-0.5 rounded font-medium ${
                   healthData?.success ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
                 }`}>
-                  {healthData?.success ? 'Connected' : 'Offline'}
+                  {healthData?.success ? (healthData.environment || 'Online') : 'Offline'}
                 </span>
               </div>
             </div>
@@ -144,43 +166,45 @@ function App() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <HiOutlineDatabase className="w-5 h-5 text-indigo-500" />
-                  <h4 className="text-base font-semibold text-slate-800">MongoDB</h4>
+                  <h4 className="text-base font-semibold text-slate-800">MongoDB Database</h4>
                 </div>
                 <p className="text-sm text-slate-500 mt-1">
                   {loading ? 'Đang kiểm tra...' : `Status: ${healthData?.database?.status || 'Unknown'}`}
                 </p>
               </div>
               <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
-                <span>mongodb://localhost:27017</span>
+                <span>{healthData?.database?.type || 'MongoDB'}</span>
                 <span className={`px-2 py-0.5 rounded font-medium ${
                   healthData?.database?.connected ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
                 }`}>
-                  {healthData?.database?.connected ? 'Active' : 'Inactive'}
+                  {healthData?.database?.connected ? 'Connected' : 'Disconnected'}
                 </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Quick Guide / Next Steps */}
+        {/* Production Readiness Checklist */}
         <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-          <h3 className="text-base font-bold text-slate-900 mb-3">Thư mục & Cấu trúc đã sẵn sàng</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs font-mono">
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-              <span className="font-bold text-indigo-600 block mb-1">server/config</span>
-              <span className="text-slate-500">db.js (Mongoose connection)</span>
+          <h3 className="text-base font-bold text-slate-900 mb-3">Cấu trúc Sẵn sàng Triển khai (Production Ready)</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 space-y-1">
+              <span className="font-bold text-indigo-600 block">Relative API Path (/api)</span>
+              <p className="text-slate-600">
+                Ở production tự động gọi relative path, hoàn toàn không phụ thuộc hay hardcode localhost.
+              </p>
             </div>
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-              <span className="font-bold text-indigo-600 block mb-1">server/middlewares</span>
-              <span className="text-slate-500">errorHandler, auth, validation</span>
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 space-y-1">
+              <span className="font-bold text-indigo-600 block">SPA Static Serving</span>
+              <p className="text-slate-600">
+                Express server tự động phục vụ static bundle của React khi deploy chung trên Render/Railway.
+              </p>
             </div>
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-              <span className="font-bold text-indigo-600 block mb-1">server/modules</span>
-              <span className="text-slate-500">Rooms, Bookings, Users, AI</span>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-              <span className="font-bold text-indigo-600 block mb-1">client/src/services</span>
-              <span className="text-slate-500">api.js (Axios Client ready)</span>
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 space-y-1">
+              <span className="font-bold text-indigo-600 block">CORS & Trust Proxy</span>
+              <p className="text-slate-600">
+                Hỗ trợ whitelist nhiều domain qua CLIENT_URL và rate-limiter chuẩn sau Cloud Proxy.
+              </p>
             </div>
           </div>
         </div>
