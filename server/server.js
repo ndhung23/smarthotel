@@ -92,15 +92,14 @@ if (isProduction) {
   const clientBuildPath = path.join(__dirname, '../client/build');
   app.use(express.static(clientBuildPath));
 
-  // Catch-all middleware for SPA client-side routing (Express 5 compatible)
-  app.use((req, res, next) => {
-    if (req.method === 'GET' && !req.originalUrl.startsWith('/api')) {
-      return res.sendFile(path.join(clientBuildPath, 'index.html'));
+  app.get('*', (req, res, next) => {
+    if (req.originalUrl.startsWith('/api')) {
+      return next();
     }
-    next();
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
   });
 } else {
-  // Root welcome route for development
+  // Root welcome route for dev
   app.get('/', (req, res) => {
     res.json({
       name: 'SmartHotel API',
@@ -116,7 +115,12 @@ if (isProduction) {
 app.use(notFoundHandler);
 app.use(globalErrorHandler);
 
-// Start Server
-app.listen(PORT, () => {
-  console.log(`[SmartHotel Server] Listening on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
-});
+// Start Server (only listen if not running as serverless function on Vercel)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`[SmartHotel Server] Listening on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+  });
+}
+
+module.exports = app;
+
