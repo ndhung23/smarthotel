@@ -171,6 +171,11 @@ function App() {
                 <p className="text-sm text-slate-500 mt-1">
                   {loading ? 'Đang kiểm tra...' : `Status: ${healthData?.database?.status || 'Unknown'}`}
                 </p>
+                {healthData?.database?.error && (
+                  <p className="text-xs text-rose-500 mt-1 leading-snug break-words">
+                    {healthData.database.error}
+                  </p>
+                )}
               </div>
               <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
                 <span>{healthData?.database?.type || 'MongoDB'}</span>

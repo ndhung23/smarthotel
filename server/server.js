@@ -82,7 +82,14 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
+  let dbError = null;
+  try {
+    await connectDB();
+  } catch (err) {
+    dbError = err.message;
+  }
+
   const dbState = mongoose.connection.readyState;
   const dbStatusMap = {
     0: 'Disconnected',
@@ -102,6 +109,7 @@ app.get('/api/health', (req, res) => {
       status: dbStatusMap[dbState] || 'Unknown',
       connected: dbState === 1,
       type: isCloudDB ? 'MongoDB Atlas (Cloud)' : 'MongoDB Local',
+      error: dbError || (dbState !== 1 ? 'Chưa kết nối được. Kiểm tra IP Whitelist 0.0.0.0/0 trên Atlas hoặc User/Pass.' : null),
     },
     environment: process.env.NODE_ENV || 'development',
   });

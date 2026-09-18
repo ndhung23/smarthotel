@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 let isConnected = false;
 
 const connectDB = async () => {
-  if (isConnected || mongoose.connection.readyState >= 1) {
+  if (isConnected && mongoose.connection.readyState >= 1) {
     return;
   }
 
@@ -24,11 +24,13 @@ const connectDB = async () => {
 
     isConnected = true;
     console.log(`[MongoDB] Connected successfully: ${conn.connection.host}`);
+    return conn;
   } catch (error) {
     console.error(`[MongoDB] Connection error: ${error.message}`);
     if (!process.env.VERCEL) {
       process.exit(1);
     }
+    throw error;
   }
 };
 
