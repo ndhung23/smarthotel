@@ -40,12 +40,11 @@ app.use(
       // Check direct match or matching with http/https variant
       const isAllowed = allowedOrigins.some((allowed) => {
         if (allowed === '*' || cleanOrigin === allowed) return true;
-        // Allow https if user entered http in environment
         if (allowed.replace(/^http:\/\//, 'https://') === cleanOrigin) return true;
         return false;
       });
 
-      // Also allow all vercel.app subdomains for this project's deployments
+      // Allow all vercel.app subdomains
       const isVercelOrigin = cleanOrigin.endsWith('.vercel.app');
 
       if (isAllowed || isVercelOrigin || !isProduction) {
@@ -116,15 +115,15 @@ app.get('/api/health', async (req, res) => {
 });
 
 // Production: Serve React frontend build (SPA monolithic deployment)
-if (isProduction) {
+if (isProduction && !process.env.VERCEL) {
   const clientBuildPath = path.join(__dirname, '../client/build');
   app.use(express.static(clientBuildPath));
 
-  app.get('*', (req, res, next) => {
-    if (req.originalUrl.startsWith('/api')) {
-      return next();
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.originalUrl.startsWith('/api')) {
+      return res.sendFile(path.join(clientBuildPath, 'index.html'));
     }
-    res.sendFile(path.join(clientBuildPath, 'index.html'));
+    next();
   });
 } else {
   // Root welcome route for dev
@@ -151,4 +150,3 @@ if (!process.env.VERCEL) {
 }
 
 module.exports = app;
-
